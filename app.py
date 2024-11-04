@@ -1,11 +1,21 @@
-# /var/www/api.niekwegman.nl/app.py
 from flask import Flask
+from flask_jwt_extended import JWTManager
+from models import db
+from routes import api_bp
+from auth import auth_bp
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['JWT_SECRET_KEY'] = 'your-secret-key'
 
-@app.route('/')
-def hello():
-    return "Hello from api.niekwegman.nl!"
+db.init_app(app)
+jwt = JWTManager(app)
 
-if __name__ == "__main__":
-    app.run()
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(api_bp, url_prefix='/api')
+
+with app.app_context():
+    db.create_all()
+
+if __name__ == '__main__':
+    app.run(debug=True)
